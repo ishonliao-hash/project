@@ -28,15 +28,12 @@ export interface EditDecision {
   out_point: number;
   transition_type: 'cut' | 'dissolve' | 'fade_in' | 'fade_out' | 'wipe';
   transition_duration: number;
-  ai_notes: string;
 }
 
 export interface EditPlan {
   id: string;
   project_id: string;
   decisions: EditDecision[];
-  ai_summary: string;
-  ai_reasoning: string;
   total_duration: number;
   created_at: string;
 }
@@ -44,13 +41,8 @@ export interface EditPlan {
 export interface Project {
   id: string;
   name: string;
-  description: string;
   scenes: Scene[];
   edit_plan?: EditPlan;
   created_at: string;
   updated_at: string;
 }
-
-export type TransitionType = 'cut' | 'dissolve' | 'fade_in' | 'fade_out' | 'wipe';
-
-export type ExportStatus = 'idle' | 'processing' | 'complete' | 'error';

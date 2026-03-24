@@ -1,5 +1,4 @@
-"""AI Film Editor — FastAPI Backend"""
-import os
+"""Film Editor — FastAPI Backend"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,11 +6,7 @@ from pathlib import Path
 
 from routers import projects, scenes, editor, export
 
-app = FastAPI(
-    title="AI Film Editor",
-    description="AI-powered film editing tool — describe your vision, let AI cut your film",
-    version="1.0.0"
-)
+app = FastAPI(title="Film Editor", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,13 +16,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
 app.include_router(projects.router, prefix="/api")
 app.include_router(scenes.router, prefix="/api")
 app.include_router(editor.router, prefix="/api")
 app.include_router(export.router, prefix="/api")
 
-# Serve static frontend if built
 frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
@@ -35,10 +28,7 @@ if frontend_dist.exists():
 
 @app.get("/api/health")
 async def health():
-    return {
-        "status": "ok",
-        "anthropic_key_set": bool(os.environ.get("ANTHROPIC_API_KEY")),
-    }
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":

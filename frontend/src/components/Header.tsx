@@ -8,8 +8,8 @@ export default function Header() {
         <Scissors size={18} />
       </div>
       <div>
-        <h1 className="text-lg font-bold tracking-tight">AI Film Editor</h1>
-        <p className="text-xs text-gray-400">Describe your vision. Let AI cut your film.</p>
+        <h1 className="text-lg font-bold tracking-tight">Film Editor</h1>
+        <p className="text-xs text-gray-400">Upload scenes · Build your cut · Export</p>
       </div>
     </header>
   );

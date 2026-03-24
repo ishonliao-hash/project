@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { Trash2, Clock, Camera, MapPin, FileText, ChevronDown } from 'lucide-react';
+import { Trash2, Clock, Camera, Plus } from 'lucide-react';
 import type { Scene } from '../types';
 import { getThumbnailUrl } from '../api/client';
 
 interface Props {
   scene: Scene;
   onDelete: (id: string) => void;
-  isInPlan?: boolean;
+  onAddToTimeline: (scene: Scene) => void;
+  isInTimeline?: boolean;
 }
 
 function formatDuration(secs: number): string {
@@ -16,16 +16,13 @@ function formatDuration(secs: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function SceneCard({ scene, onDelete, isInPlan }: Props) {
-  const [expanded, setExpanded] = useState(false);
+export default function SceneCard({ scene, onDelete, onAddToTimeline, isInTimeline }: Props) {
   const thumbUrl = scene.thumbnail ? getThumbnailUrl(scene.thumbnail) : null;
 
   return (
-    <div className={`panel rounded-lg overflow-hidden group transition-all ${
-      isInPlan ? 'border-film-green/30 ring-1 ring-film-green/20' : ''
-    }`}>
-      {/* Thumbnail row */}
+    <div className="panel rounded-lg overflow-hidden group">
       <div className="flex items-center gap-3 p-2">
+        {/* Thumbnail */}
         <div className="flex-shrink-0 w-20 h-12 bg-film-dark rounded overflow-hidden">
           {thumbUrl ? (
             <img src={thumbUrl} alt={scene.original_filename} className="w-full h-full object-cover" />
@@ -40,59 +37,32 @@ export default function SceneCard({ scene, onDelete, isInPlan }: Props) {
           <p className="text-sm font-medium truncate" title={scene.original_filename}>
             {scene.original_filename}
           </p>
-          <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-            <span className="flex items-center gap-1">
-              <Clock size={10} /> {formatDuration(scene.duration)}
-            </span>
-            {scene.width && (
-              <span>{scene.width}x{scene.height}</span>
-            )}
-            {isInPlan && (
-              <span className="badge bg-film-green/20 text-film-green">In Plan</span>
-            )}
+          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+            <span className="flex items-center gap-1"><Clock size={10} /> {formatDuration(scene.duration)}</span>
+            {scene.width && <span>{scene.width}×{scene.height}</span>}
           </div>
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1">
           <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-gray-500 hover:text-white p-1 rounded"
+            onClick={() => onAddToTimeline(scene)}
+            title="Add to timeline"
+            className={`p-1.5 rounded transition-colors ${
+              isInTimeline
+                ? 'text-film-green bg-film-green/10'
+                : 'text-gray-500 hover:text-film-accent hover:bg-film-accent/10'
+            }`}
           >
-            <ChevronDown size={14} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            <Plus size={14} />
           </button>
           <button
             onClick={() => onDelete(scene.id)}
-            className="text-gray-500 hover:text-film-red p-1 rounded"
+            className="text-gray-500 hover:text-film-red p-1.5 rounded transition-colors opacity-0 group-hover:opacity-100"
           >
             <Trash2 size={13} />
           </button>
         </div>
       </div>
-
-      {/* Expanded metadata */}
-      {expanded && (
-        <div className="border-t border-film-border px-3 py-2 space-y-1.5 text-xs text-gray-400">
-          {scene.metadata.shot_type && (
-            <div className="flex items-center gap-2">
-              <Camera size={11} /> {scene.metadata.shot_type}
-            </div>
-          )}
-          {scene.metadata.location && (
-            <div className="flex items-center gap-2">
-              <MapPin size={11} /> {scene.metadata.location}
-            </div>
-          )}
-          {scene.metadata.notes && (
-            <div className="flex items-start gap-2">
-              <FileText size={11} className="mt-0.5 flex-shrink-0" />
-              <span>{scene.metadata.notes}</span>
-            </div>
-          )}
-          {scene.fps && (
-            <div className="text-gray-500">{scene.fps} fps</div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

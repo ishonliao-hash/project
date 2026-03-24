@@ -1,33 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import Header from './components/Header';
 import ProjectSelector from './components/ProjectSelector';
 import SceneUploader from './components/SceneUploader';
 import SceneCard from './components/SceneCard';
-import DescriptionPanel from './components/DescriptionPanel';
 import Timeline from './components/Timeline';
-import AIReasoningPanel from './components/AIReasoningPanel';
 import ExportPanel from './components/ExportPanel';
-import type { Project, Scene, EditPlan, EditDecision } from './types';
-import { getProject, updateEditPlan, deleteScene } from './api/client';
-import { Layers, Film, Scissors, RefreshCw } from 'lucide-react';
+import type { Project, Scene, EditDecision } from './types';
+import { deleteScene, saveEditPlan } from './api/client';
+import { Film, Scissors, Layers } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function App() {
   const [project, setProject] = useState<Project | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const refreshProject = useCallback(async (id: string) => {
-    setRefreshing(true);
-    try {
-      const p = await getProject(id);
-      setProject(p);
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
-
-  const handleSelectProject = (p: Project) => {
-    setProject(p);
-  };
+  const handleSelectProject = (p: Project) => setProject(p);
 
   const handleSceneAdded = (scene: Scene) => {
     setProject(prev => prev ? { ...prev, scenes: [...prev.scenes, scene] } : prev);
@@ -36,98 +22,82 @@ export default function App() {
   const handleDeleteScene = async (sceneId: string) => {
     if (!project) return;
     await deleteScene(project.id, sceneId);
-    setProject(prev => prev ? {
-      ...prev,
-      scenes: prev.scenes.filter(s => s.id !== sceneId)
-    } : prev);
+    // Also remove from timeline if present
+    const newDecisions = (project.edit_plan?.decisions ?? [])
+      .filter(d => d.scene_id !== sceneId)
+      .map((d, i) => ({ ...d, order: i + 1 }));
+    setProject(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        scenes: prev.scenes.filter(s => s.id !== sceneId),
+        edit_plan: prev.edit_plan ? { ...prev.edit_plan, decisions: newDecisions } : undefined
+      };
+    });
   };
 
-  const handleEditPlanGenerated = (plan: EditPlan) => {
+  const handleAddToTimeline = async (scene: Scene) => {
+    if (!project) return;
+    const existing = project.edit_plan?.decisions ?? [];
+    const newDecision: EditDecision = {
+      id: uuidv4(),
+      scene_id: scene.id,
+      scene_filename: scene.filename,
+      order: existing.length + 1,
+      in_point: 0,
+      out_point: 0,
+      transition_type: existing.length === 0 ? 'fade_in' : 'cut',
+      transition_duration: 0.5,
+    };
+    const updated = [...existing, newDecision];
+    const plan = await saveEditPlan(project.id, updated);
     setProject(prev => prev ? { ...prev, edit_plan: plan } : prev);
-  };
-
-  const handleProjectUpdated = (updated: Project) => {
-    setProject(updated);
   };
 
   const handlePlanUpdate = async (decisions: EditDecision[]) => {
     if (!project) return;
-    const updated = await updateEditPlan(project.id, decisions);
-    setProject(prev => prev ? { ...prev, edit_plan: updated } : prev);
+    const plan = await saveEditPlan(project.id, decisions);
+    setProject(prev => prev ? { ...prev, edit_plan: plan } : prev);
   };
 
-  const sceneIdsInPlan = new Set(project?.edit_plan?.decisions.map(d => d.scene_id) ?? []);
+  const timelineSceneIds = new Set(project?.edit_plan?.decisions.map(d => d.scene_id) ?? []);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left sidebar */}
-        <aside className="w-64 flex-shrink-0 border-r border-film-border overflow-y-auto p-3 space-y-3">
-          <ProjectSelector
-            selectedId={project?.id ?? null}
-            onSelect={handleSelectProject}
-          />
+        {/* Sidebar */}
+        <aside className="w-60 flex-shrink-0 border-r border-film-border overflow-y-auto p-3">
+          <ProjectSelector selectedId={project?.id ?? null} onSelect={handleSelectProject} />
         </aside>
 
-        {/* Main content */}
+        {/* Main */}
         <main className="flex-1 overflow-y-auto">
           {!project ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-4 max-w-sm">
                 <div className="flex justify-center gap-3 text-film-border">
-                  <Film size={40} />
-                  <Scissors size={32} />
+                  <Film size={40} /><Scissors size={32} />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-300">AI Film Editor</h2>
-                <p className="text-gray-500 max-w-sm">
-                  Select or create a project to start editing.
-                  Upload your scenes, describe your vision, and let AI craft your film.
+                <h2 className="text-xl font-semibold text-gray-300">Film Editor</h2>
+                <p className="text-gray-500 text-sm">
+                  Create a project in the sidebar, upload your scenes, arrange them in the timeline, and export your film.
                 </p>
               </div>
             </div>
           ) : (
             <div className="p-4 space-y-4 max-w-5xl mx-auto">
-              {/* Project header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold">{project.name}</h2>
-                  <p className="text-sm text-gray-500">
-                    {project.scenes.length} scene{project.scenes.length !== 1 ? 's' : ''}
-                    {project.edit_plan
-                      ? ` · ${project.edit_plan.decisions.length} clips in edit plan`
-                      : ''}
-                  </p>
-                </div>
-                <button
-                  onClick={() => refreshProject(project.id)}
-                  disabled={refreshing}
-                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
-                >
-                  <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
-                  Refresh
-                </button>
-              </div>
+              {/* Project title */}
+              <h2 className="text-xl font-bold">{project.name}</h2>
 
-              {/* Top row: Description + Upload */}
-              <div className="grid grid-cols-2 gap-4">
-                <DescriptionPanel
-                  project={project}
-                  onEditPlanGenerated={handleEditPlanGenerated}
-                  onProjectUpdated={handleProjectUpdated}
-                />
-
-                <div className="panel p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Layers size={15} className="text-film-accent" />
-                    <h2 className="font-semibold text-sm">Upload Scenes</h2>
-                  </div>
-                  <SceneUploader
-                    projectId={project.id}
-                    onSceneAdded={handleSceneAdded}
-                  />
+              {/* Upload */}
+              <div className="panel p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Layers size={15} className="text-film-accent" />
+                  <h2 className="font-semibold text-sm">Upload Scenes</h2>
                 </div>
+                <SceneUploader projectId={project.id} onSceneAdded={handleSceneAdded} />
               </div>
 
               {/* Scene library */}
@@ -138,7 +108,9 @@ export default function App() {
                       <Film size={15} className="text-film-accent" />
                       <h2 className="font-semibold text-sm">Scene Library</h2>
                     </div>
-                    <span className="text-xs text-gray-500">{project.scenes.length} scenes</span>
+                    <span className="text-xs text-gray-500">
+                      Click <span className="text-film-accent font-bold">+</span> to add a scene to the timeline
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {project.scenes.map(scene => (
@@ -146,24 +118,24 @@ export default function App() {
                         key={scene.id}
                         scene={scene}
                         onDelete={handleDeleteScene}
-                        isInPlan={sceneIdsInPlan.has(scene.id)}
+                        onAddToTimeline={handleAddToTimeline}
+                        isInTimeline={timelineSceneIds.has(scene.id)}
                       />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Timeline */}
-              {project.edit_plan && (
-                <>
-                  <AIReasoningPanel plan={project.edit_plan} />
-                  <Timeline
-                    plan={project.edit_plan}
-                    scenes={project.scenes}
-                    onPlanUpdate={handlePlanUpdate}
-                  />
-                  <ExportPanel project={project} />
-                </>
+              {/* Timeline — always visible once a project is open */}
+              <Timeline
+                plan={project.edit_plan}
+                scenes={project.scenes}
+                onPlanUpdate={handlePlanUpdate}
+              />
+
+              {/* Export */}
+              {(project.edit_plan?.decisions.length ?? 0) > 0 && (
+                <ExportPanel project={project} />
               )}
             </div>
           )}

@@ -1,4 +1,3 @@
-"""Project management endpoints."""
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
 from ..models.schemas import Project, ProjectCreate, ProjectUpdate
@@ -14,7 +13,7 @@ async def list_projects():
 
 @router.post("/", response_model=Project)
 async def create_project(data: ProjectCreate):
-    project = Project(name=data.name, description=data.description)
+    project = Project(name=data.name)
     storage.save_project(project)
     return project
 
@@ -34,8 +33,6 @@ async def update_project(project_id: str, data: ProjectUpdate):
         raise HTTPException(status_code=404, detail="Project not found")
     if data.name is not None:
         project.name = data.name
-    if data.description is not None:
-        project.description = data.description
     project.updated_at = datetime.utcnow()
     storage.save_project(project)
     return project

@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-film-black text-white font-sans;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-film-dark;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-film-border rounded;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-film-accent text-black font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-film-panel text-white border border-film-border px-4 py-2 rounded-lg hover:bg-film-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-danger {
+    @apply bg-film-red text-white px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity;
+  }
+  .panel {
+    @apply bg-film-panel border border-film-border rounded-xl;
+  }
+  .input {
+    @apply bg-film-dark border border-film-border rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-film-accent w-full;
+  }
+  .textarea {
+    @apply bg-film-dark border border-film-border rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-film-accent w-full resize-none;
+  }
+  .badge {
+    @apply text-xs px-2 py-0.5 rounded-full font-medium;
+  }
+}
+
+/* Drag-and-drop styles */
+.sortable-item {
+  touch-action: manipulation;
+}
+.sortable-ghost {
+  @apply opacity-30;
+}
+
+/* Timeline track */
+.timeline-clip {
+  @apply h-full rounded cursor-grab active:cursor-grabbing transition-all;
+}
+
+/* Thinking animation */
+@keyframes thinking-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.thinking-dot {
+  animation: thinking-pulse 1.2s ease-in-out infinite;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }

@@ -1,6 +1,6 @@
 """In-memory storage for projects and scenes (replace with DB in production)."""
 from typing import Dict, Optional
-from ..models.schemas import Project, Scene, EditPlan
+from models.schemas import Project, Scene, EditPlan
 import json
 import os
 from pathlib import Path

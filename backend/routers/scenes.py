@@ -5,8 +5,8 @@ import shutil
 import uuid
 import os
 from pathlib import Path
-from ..models.schemas import Scene, SceneMetadata, SceneUpdate
-from ..services import storage, video_processor
+from models.schemas import Scene, SceneMetadata, SceneUpdate
+from services import storage, video_processor
 
 router = APIRouter(prefix="/scenes", tags=["scenes"])
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
-from ..models.schemas import Project, ProjectCreate, ProjectUpdate
-from ..services import storage
+from models.schemas import Project, ProjectCreate, ProjectUpdate
+from services import storage
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 

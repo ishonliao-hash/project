@@ -4,8 +4,8 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 import uuid
 import os
-from ..models.schemas import ExportRequest
-from ..services import storage, video_processor
+from models.schemas import ExportRequest
+from services import storage, video_processor
 
 router = APIRouter(prefix="/export", tags=["export"])
 

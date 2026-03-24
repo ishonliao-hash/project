@@ -1,7 +1,7 @@
 """Manual edit plan endpoints — no AI, pure user control."""
 from fastapi import APIRouter, HTTPException
-from ..models.schemas import EditPlanUpdate, EditPlan
-from ..services import storage
+from models.schemas import EditPlanUpdate, EditPlan
+from services import storage
 
 router = APIRouter(prefix="/editor", tags=["editor"])
 
@@ -23,7 +23,7 @@ async def save_edit_plan(project_id: str, data: EditPlanUpdate):
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    from ..models.schemas import EditPlan
+    from models.schemas import EditPlan
     from datetime import datetime
 
     if project.edit_plan:

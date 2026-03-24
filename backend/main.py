@@ -21,14 +21,15 @@ app.include_router(scenes.router, prefix="/api")
 app.include_router(editor.router, prefix="/api")
 app.include_router(export.router, prefix="/api")
 
-frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
-if frontend_dist.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
-
 
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
 
 
 if __name__ == "__main__":

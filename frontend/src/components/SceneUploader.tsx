@@ -22,7 +22,7 @@ export default function SceneUploader({ projectId, onSceneAdded }: Props) {
     for (const file of acceptedFiles) {
       setUploading(prev => [...prev, { name: file.name, progress: 'uploading' }]);
       try {
-        const scene = await uploadScene(projectId, file, {});
+        const scene = await uploadScene(projectId, file);
         onSceneAdded(scene);
         setUploading(prev =>
           prev.map(u => u.name === file.name ? { ...u, progress: 'done' } : u)
